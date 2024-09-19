@@ -4,4 +4,5 @@ export type UserEntity = Entity & {
   name: string;
   email: string;
   password: string;
+  balance: number;
 };

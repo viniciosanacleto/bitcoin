@@ -16,23 +16,24 @@ datasource db {
 model User {
   id String @id @default(cuid())
 
-  email    String @unique
+  email    String  @unique
   name     String
   password String
+  balance  Decimal @db.Decimal(20, 8)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  Wallet Wallet[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  Position  Position[]
 }
 
-model Wallet {
+model Position {
   id String @id @default(cuid())
 
   userId   String
   user     User    @relation(fields: [userId], references: [id])
-  currency String
-  balance  Decimal @db.Decimal(65, 8)
+  value    Decimal @db.Decimal(20, 8)
+  btcPrice Decimal @db.Decimal(20, 8)
+  btcQty   Decimal @db.Decimal(20, 8)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

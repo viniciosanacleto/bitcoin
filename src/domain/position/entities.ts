@@ -1,9 +1,10 @@
 import { Entity } from "../shared/entity";
 import { UserEntity } from "../user/entities";
 
-export type WalletEntity = Entity & {
+export type PositionEntity = Entity & {
   userId: string;
   user?: UserEntity;
-  currency: string;
-  balance: number;
+  value: number;
+  btcPrice: number;
+  btcQty: number;
 };
