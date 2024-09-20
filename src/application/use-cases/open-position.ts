@@ -10,40 +10,42 @@ export class OpenPositionUseCase {
 
   constructor(
     private userRepo: UserRepositoryInterface,
-    private positionRepo: PositionRepositoryInterface,
-    private bitcoinMarket: BitcoinMarketGatewayInterface
+    private positionRepo: PositionRepositoryInterface
   ) {}
 
-  public async execute(userId: string, value: number): Promise<PositionEntity> {
+  public async execute(
+    userId: string,
+    qty: number,
+    btcPrice: number
+  ): Promise<PositionEntity> {
     const user = await this.userRepo.getById(userId);
     if (!user) {
       throw new Error("User not found!");
     }
 
+    const value = qty * btcPrice;
     const newBalance = user.balance - value;
     if (newBalance < 0) {
       throw new Error("User has no enough balance to open this position");
     }
 
-    const bitcoinPrice = await this.bitcoinMarket.getLastPrice();
-
     //TODO Database transaction
 
     await this.userRepo.update({ ...user, balance: newBalance });
     this.logger.log(
-      `Balance updated for User: [${user.id}] ActualBalance=${user.balance} NewBalance=${newBalance}`
+      `Balance subtracted for User: [${user.id}] Value=${value} PreviousBalance=${user.balance} NewBalance=${newBalance}`
     );
 
-    const btcQty = value / bitcoinPrice.sell;
+    const btcQty = value / btcPrice;
     const newPosition: CreatePositionDTO = {
-      btcPrice: bitcoinPrice.sell,
+      btcPrice: btcPrice,
       btcQty: btcQty,
       value,
       userId,
     };
     const position = await this.positionRepo.create(newPosition);
     this.logger.log(
-      `New position created: [${position.id}] Value=${value}, BtcQTY=${btcQty}, BtcPrice=${bitcoinPrice.sell}`
+      `New position created: [${position.id}] Value=${value}, BtcQTY=${btcQty}, BtcPrice=${btcPrice}`
     );
     return position;
   }
