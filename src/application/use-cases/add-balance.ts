@@ -1,3 +1,4 @@
+import { UserEntity } from "../../domain/user/entities";
 import { UserRepositoryInterface } from "../../domain/user/repository";
 import Logger from "../../shared/utils/logger";
 
@@ -6,14 +7,9 @@ export class AddBalanceUseCase {
 
   constructor(private userRepo: UserRepositoryInterface) {}
 
-  public async execute(userId: string, value: number) {
+  public async execute(user: UserEntity, value: number) {
     if (value <= 0) {
       throw new Error("Value should be greater than 0");
-    }
-
-    const user = await this.userRepo.getById(userId);
-    if (!user) {
-      throw new Error("User does not exist");
     }
 
     const updatedUser = await this.userRepo.update({

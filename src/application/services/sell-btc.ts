@@ -1,14 +1,17 @@
 import { PositionEntity } from "../../domain/position/entities";
 import { PositionRepositoryInterface } from "../../domain/position/repository";
+import { TransactionRepositoryInterface } from "../../domain/transaction/repository";
 import { UserRepositoryInterface } from "../../domain/user/repository";
 import { BitcoinMarketGatewayInterface } from "../../gateways/bitcoin-market/interface";
 import { ClosePositionUseCase } from "../use-cases/close-position";
+import { CreateTransactionUseCase } from "../use-cases/create-transaction";
 import { OpenPositionUseCase } from "../use-cases/open-position";
 
 export class SellBtcService {
   constructor(
     private positionRepo: PositionRepositoryInterface,
     private userRepo: UserRepositoryInterface,
+    private transactionRepo: TransactionRepositoryInterface,
     private btcMarket: BitcoinMarketGatewayInterface
   ) {}
 
@@ -25,7 +28,7 @@ export class SellBtcService {
         where: { userId },
         page,
         pageSize: 10,
-        order: "asc",
+        order: "desc",
         orderBy: "createdAt",
       });
 
@@ -45,6 +48,11 @@ export class SellBtcService {
   }
 
   public async execute(userId: string, btcQty: number) {
+    const user = await this.userRepo.getById(userId);
+    if (!user) {
+      throw new Error("User Not found");
+    }
+
     if (btcQty <= 0) {
       throw Error("btcQty should be greater than 0");
     }
@@ -69,20 +77,50 @@ export class SellBtcService {
       this.userRepo,
       this.positionRepo
     );
+    const createTransaction = new CreateTransactionUseCase(
+      this.transactionRepo
+    );
     const btcPriceNow = await this.btcMarket.getLastPrice();
 
     // Close the positions selected to fill the BTC quantity that order required
     let closedBtcQty = 0;
+    let userBalance = user.balance;
     for (const position of selectedPositions) {
       const remainingToBeClosed = btcQty - closedBtcQty;
+      const valueEarned = position.btcQty * btcPriceNow.buy;
 
-      await closePosition.execute(position.id, btcPriceNow.buy);
+      await closePosition.execute(position, user, btcPriceNow.buy);
+
+      await createTransaction.execute({
+        userId: user.id,
+        type: "POSITION_CLOSE",
+        value: valueEarned,
+        balanceBefore: userBalance,
+        balanceAfter: userBalance + valueEarned,
+        btcPrice: btcPriceNow.buy,
+        btcQty: position.btcQty,
+      });
+
       closedBtcQty += position.btcQty;
+      userBalance += valueEarned;
 
       // If its a partial close of the position, create a new position with the residual BTC quantity with the original btc price of the position
       const residualQty = position.btcQty - remainingToBeClosed;
       if (residualQty > 0) {
-        await openPosition.execute(userId, residualQty, position.btcPrice);
+        await openPosition.execute(user, residualQty, position.btcPrice);
+
+        const valueReinvested = residualQty * btcPriceNow.sell;
+        await createTransaction.execute({
+          userId: user.id,
+          type: "POSITION_OPEN",
+          value: valueReinvested,
+          balanceBefore: userBalance,
+          balanceAfter: userBalance - valueReinvested,
+          btcPrice: btcPriceNow.sell,
+          btcQty: residualQty,
+        });
+
+        userBalance -= valueReinvested;
       }
     }
   }

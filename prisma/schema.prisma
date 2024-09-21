@@ -21,9 +21,10 @@ model User {
   password String
   balance  Decimal @db.Decimal(20, 8)
 
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  Position  Position[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  Position    Position[]
+  Transaction Transaction[]
 }
 
 model Position {
@@ -34,6 +35,22 @@ model Position {
   value    Decimal @db.Decimal(20, 8)
   btcPrice Decimal @db.Decimal(20, 8)
   btcQty   Decimal @db.Decimal(20, 8)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Transaction {
+  id String @id @default(cuid())
+
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  type          String
+  value         Decimal  @db.Decimal(20, 8)
+  balanceBefore Decimal  @db.Decimal(20, 8)
+  balanceAfter  Decimal  @db.Decimal(20, 8)
+  btcQty        Decimal? @db.Decimal(20, 8)
+  btcPrice      Decimal? @db.Decimal(20, 8)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

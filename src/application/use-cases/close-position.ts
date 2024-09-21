@@ -1,4 +1,6 @@
+import { PositionEntity } from "../../domain/position/entities";
 import { PositionRepositoryInterface } from "../../domain/position/repository";
+import { UserEntity } from "../../domain/user/entities";
 import { UserRepositoryInterface } from "../../domain/user/repository";
 import { BitcoinMarketGatewayInterface } from "../../gateways/bitcoin-market/interface";
 import Logger from "../../shared/utils/logger";
@@ -11,20 +13,14 @@ export class ClosePositionUseCase {
     private userRepo: UserRepositoryInterface
   ) {}
 
-  public async execute(positionId: string, btcPrice: number): Promise<void> {
-    const position = await this.positionRepo.getById(positionId);
-    if (!position) {
-      throw new Error("Position not found!");
-    }
-
-    const user = await this.userRepo.getById(position.userId);
-    if (!user) {
-      throw new Error("User not found!");
-    }
-
+  public async execute(
+    position: PositionEntity,
+    user: UserEntity,
+    btcPrice: number
+  ): Promise<void> {
     await this.positionRepo.deleteById(position.id);
     this.logger.log(
-      `Position closed: [${positionId}] BtcQty=${position.btcQty}`
+      `Position closed: [${position.id}] BtcQty=${position.btcQty}`
     );
 
     const sellValue = position.btcQty * btcPrice;

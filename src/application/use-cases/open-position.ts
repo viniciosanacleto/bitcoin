@@ -1,6 +1,7 @@
 import { CreatePositionDTO } from "../../domain/position/dtos/create-position";
 import { PositionEntity } from "../../domain/position/entities";
 import { PositionRepositoryInterface } from "../../domain/position/repository";
+import { UserEntity } from "../../domain/user/entities";
 import { UserRepositoryInterface } from "../../domain/user/repository";
 import { BitcoinMarketGatewayInterface } from "../../gateways/bitcoin-market/interface";
 import Logger from "../../shared/utils/logger";
@@ -14,15 +15,10 @@ export class OpenPositionUseCase {
   ) {}
 
   public async execute(
-    userId: string,
+    user: UserEntity,
     qty: number,
     btcPrice: number
   ): Promise<PositionEntity> {
-    const user = await this.userRepo.getById(userId);
-    if (!user) {
-      throw new Error("User not found!");
-    }
-
     const value = qty * btcPrice;
     const newBalance = user.balance - value;
     if (newBalance < 0) {
@@ -41,7 +37,7 @@ export class OpenPositionUseCase {
       btcPrice: btcPrice,
       btcQty: btcQty,
       value,
-      userId,
+      userId: user.id,
     };
     const position = await this.positionRepo.create(newPosition);
     this.logger.log(
