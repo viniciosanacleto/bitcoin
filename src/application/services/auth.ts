@@ -18,7 +18,7 @@ export class AuthService {
       throw new Error("JWT Secret not found in env file");
     }
     return jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
+      expiresIn: "2h",
     });
   }
 }

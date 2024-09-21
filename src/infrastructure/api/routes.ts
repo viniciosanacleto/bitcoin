@@ -15,5 +15,7 @@ router.post("/account/deposit", authMiddleware, userController.deposit);
 const positionController = new PositionController();
 router.post("/btc/purchase", authMiddleware, positionController.buy);
 router.post("/btc/sell", authMiddleware, positionController.sell);
+router.get("/btc/price", authMiddleware, positionController.price);
+router.get("/btc", authMiddleware, positionController.positions);
 
 export default router;

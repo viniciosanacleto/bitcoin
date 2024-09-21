@@ -8,6 +8,9 @@ import { TransactionRepository } from "../../../database/prisma/repositories/tra
 import { MercadoBitcoinAPI } from "../../../../libs/mercado-bitcoin/api";
 import validateSell from "./validations/sell";
 import { SellBtcService } from "../../../../application/services/sell-btc";
+import { GetPriceService } from "../../../../application/services/get-price";
+import { GetPositionsService } from "../../../../application/services/get-positions";
+import validateGetPositions from "./validations/get-positions";
 
 export class PositionController {
   public async buy(req: AuthenticatedRequest, res: Response) {
@@ -70,7 +73,58 @@ export class PositionController {
       res.json(transaction);
     } catch (e) {
       res.status(500).json({ error: (e as Error).message });
-      return
+      return;
+    }
+  }
+
+  public async price(req: AuthenticatedRequest, res: Response) {
+    if (!req.userId) {
+      res.status(401).send();
+      return;
+    }
+
+    try {
+      const mercadoBitcoin = new MercadoBitcoinAPI();
+      const getPrice = new GetPriceService(mercadoBitcoin);
+
+      const price = await getPrice.execute();
+      res.json(price);
+    } catch (e) {
+      res.status(500).json({ error: (e as Error).message });
+      return;
+    }
+  }
+
+  public async positions(req: AuthenticatedRequest, res: Response) {
+    if (!req.userId) {
+      res.status(401).send();
+      return;
+    }
+
+    const validatedParams = validateGetPositions(req.query);
+    if (validatedParams.error) {
+      res.status(400).json(validatedParams);
+      return;
+    }
+    const params = validatedParams.value as { page: number; pageSize: number };
+
+    try {
+      const positionRepo = new PositionRepository();
+      const mercadoBitcoin = new MercadoBitcoinAPI();
+      const getPositions = new GetPositionsService(
+        positionRepo,
+        mercadoBitcoin
+      );
+
+      const response = await getPositions.execute(
+        req.userId,
+        params.page,
+        params.pageSize
+      );
+      res.json(response);
+    } catch (e) {
+      res.status(500).json({ error: (e as Error).message });
+      return;
     }
   }
 }

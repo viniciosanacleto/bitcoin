@@ -80,4 +80,10 @@ export class PositionRepository implements PositionRepositoryInterface {
 
     return result._sum.btcQty?.toNumber() || 0;
   }
+
+  public async count(userId: string): Promise<number> {
+    return this.prisma.position.count({
+      where: { userId },
+    });
+  }
 }

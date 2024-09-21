@@ -8,4 +8,5 @@ export interface PositionRepositoryInterface {
   getById: (id: string) => Promise<PositionEntity | null>;
   deleteById: (id: string) => Promise<void>;
   sumUserBtcQty: (userId: string) => Promise<number>;
+  count: (userId: string) => Promise<number>;
 }

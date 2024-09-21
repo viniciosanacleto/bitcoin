@@ -12,9 +12,6 @@
   "author": "",
   "license": "ISC",
   "description": "",
-  "engines": {
-    "node": "^22.8.0"
-  },
   "devDependencies": {
     "@types/axios": "^0.9.36",
     "@types/bcrypt": "^5.0.2",
