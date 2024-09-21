@@ -8,8 +8,11 @@ export class CreateUserUseCase {
 
   constructor(private userRepo: UserRepositoryInterface) {}
 
-  public async execute(newUser: CreateUserDTO) {
-    const balance = newUser.balance < 0 ? 0 : newUser.balance;
+  public async execute(
+    newUser: CreateUserDTO & Omit<CreateUserDTO, "balance">
+  ) {
+    const balance =
+      !newUser.balance || newUser.balance < 0 ? 0 : newUser.balance;
 
     const encryptedPass = encryptPass(newUser.password);
     const user = await this.userRepo.create({
