@@ -13,8 +13,6 @@ import validateDeposit from "./validations/deposit";
 
 export class UserController {
   public async create(req: Request, res: Response) {
-    const userRepo = new UserRepository();
-
     const validatedBody = validateCreateUser(req.body);
     if (validatedBody.error) {
       res.status(400).json(validatedBody);
@@ -22,6 +20,7 @@ export class UserController {
     }
 
     try {
+      const userRepo = new UserRepository();
       const createUser = new CreateUserUseCase(userRepo);
       await createUser.execute(validatedBody.value);
       res.status(201).send();
@@ -31,8 +30,6 @@ export class UserController {
   }
 
   public async login(req: Request, res: Response) {
-    const userRepo = new UserRepository();
-
     const validatedBody = validateLogin(req.body);
     if (validatedBody.error) {
       res.status(400).json(validatedBody);
@@ -41,6 +38,7 @@ export class UserController {
     const data = validatedBody.value as AuthenticateUserDTO;
 
     try {
+      const userRepo = new UserRepository();
       const auth = new AuthService(userRepo);
       const token = await auth.execute(data.email, data.password);
       res.json({ token });
@@ -51,14 +49,13 @@ export class UserController {
   }
 
   public async balance(req: AuthenticatedRequest, res: Response) {
-    const userRepo = new UserRepository();
-
     if (!req.userId) {
       res.status(401).send();
       return;
     }
 
     try {
+      const userRepo = new UserRepository();
       const getBalance = new GetBalanceService(userRepo);
       const balance = await getBalance.execute(req.userId);
 
@@ -71,9 +68,6 @@ export class UserController {
   }
 
   public async deposit(req: AuthenticatedRequest, res: Response) {
-    const userRepo = new UserRepository();
-    const transactionRepo = new TransactionRepository();
-
     if (!req.userId) {
       res.status(401).send();
       return;
@@ -87,6 +81,8 @@ export class UserController {
     const data = validatedBody.value as { amount: number };
 
     try {
+      const userRepo = new UserRepository();
+      const transactionRepo = new TransactionRepository();
       const deposit = new DepositService(userRepo, transactionRepo);
       const newBalance = await deposit.execute(req.userId, data.amount);
 

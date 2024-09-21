@@ -1,11 +1,10 @@
 import Joi from "joi";
-import { AuthenticateUserDTO } from "../../../../../domain/user/dtos/authenticate";
 
 const schema = Joi.object({
   email: Joi.string().email().required(),
   password: Joi.string().required(),
 });
 
-export default function validateLogin(input: AuthenticateUserDTO) {
+export default function validateLogin(input: any) {
   return schema.validate(input);
 }

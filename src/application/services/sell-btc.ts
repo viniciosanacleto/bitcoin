@@ -31,6 +31,9 @@ export class SellBtcService {
         order: "desc",
         orderBy: "createdAt",
       });
+      if (positions.length === 0) {
+        break;
+      }
 
       for (const position of positions) {
         btcSum += position.btcQty;
@@ -84,7 +87,6 @@ export class SellBtcService {
 
     // Close the positions selected to fill the BTC quantity that order required
     let closedBtcQty = 0;
-    let userBalance = user.balance;
     for (const position of selectedPositions) {
       const remainingToBeClosed = btcQty - closedBtcQty;
       const valueEarned = position.btcQty * btcPriceNow.buy;
@@ -95,33 +97,40 @@ export class SellBtcService {
         userId: user.id,
         type: "POSITION_CLOSE",
         value: valueEarned,
-        balanceBefore: userBalance,
-        balanceAfter: userBalance + valueEarned,
+        balanceBefore: user.balance,
+        balanceAfter: user.balance + valueEarned,
         btcPrice: btcPriceNow.buy,
         btcQty: position.btcQty,
       });
 
       closedBtcQty += position.btcQty;
-      userBalance += valueEarned;
+      user.balance += valueEarned;
 
       // If its a partial close of the position, create a new position with the residual BTC quantity with the original btc price of the position
       const residualQty = position.btcQty - remainingToBeClosed;
       if (residualQty > 0) {
         await openPosition.execute(user, residualQty, position.btcPrice);
 
-        const valueReinvested = residualQty * btcPriceNow.sell;
+        const valueReinvested = residualQty * position.btcPrice;
         await createTransaction.execute({
           userId: user.id,
           type: "POSITION_OPEN",
           value: valueReinvested,
-          balanceBefore: userBalance,
-          balanceAfter: userBalance - valueReinvested,
-          btcPrice: btcPriceNow.sell,
+          balanceBefore: user.balance,
+          balanceAfter: user.balance - valueReinvested,
+          btcPrice: position.btcPrice,
           btcQty: residualQty,
         });
 
-        userBalance -= valueReinvested;
+        closedBtcQty -= residualQty;
+        user.balance -= valueReinvested;
       }
     }
+
+    return {
+      btcPrice: btcPriceNow.buy,
+      btcQty: closedBtcQty,
+      balance: user.balance,
+    };
   }
 }

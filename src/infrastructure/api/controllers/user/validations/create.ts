@@ -7,6 +7,6 @@ const schema = Joi.object({
   password: Joi.string().min(8).max(255).required(),
 });
 
-export default function validateCreateUser(input: CreateUserDTO) {
+export default function validateCreateUser(input: any) {
   return schema.validate(input);
 }

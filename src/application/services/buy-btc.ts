@@ -44,5 +44,10 @@ export class BuyBtcService {
       btcQty: qtyToBuy,
       btcPrice: btcPriceNow.sell,
     });
+
+    return {
+      btcPrice: btcPriceNow.sell,
+      btcQty: qtyToBuy,
+    };
   }
 }

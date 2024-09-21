@@ -1,9 +1,9 @@
 import Joi from "joi";
 
 const schema = Joi.object({
-  amount: Joi.number().required(),
+  value: Joi.number().required(),
 });
 
-export default function validateDeposit(input: any) {
+export default function validateBuy(input: any) {
   return schema.validate(input);
 }

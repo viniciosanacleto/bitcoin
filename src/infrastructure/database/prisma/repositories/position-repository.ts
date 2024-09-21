@@ -35,7 +35,7 @@ export class PositionRepository implements PositionRepositoryInterface {
     const orderBy = options?.orderBy || "createdAt";
 
     const positions = await this.prisma.position.findMany({
-      where: { userId: "cm18gsesb0000ptlub8l7ldm2" },
+      where: options?.where,
       take: pageSize,
       skip: pageSize * (page - 1),
       orderBy: {
