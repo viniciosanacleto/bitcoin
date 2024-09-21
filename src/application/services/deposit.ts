@@ -28,5 +28,7 @@ export class DepositService {
       balanceBefore: user.balance,
       balanceAfter: user.balance + value,
     });
+
+    return user.balance + value;
   }
 }

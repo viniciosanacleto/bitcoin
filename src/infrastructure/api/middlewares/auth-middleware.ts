@@ -1,8 +1,8 @@
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
 
-interface AuthenticatedRequest extends Request {
-  userId?: string | JwtPayload;
+export interface AuthenticatedRequest extends Request {
+  userId?: string;
 }
 
 export const authMiddleware = (
@@ -21,7 +21,7 @@ export const authMiddleware = (
       token.replace("Bearer ", ""),
       process?.env?.JWT_SECRET || ""
     ) as JwtPayload;
-    req.userId = verified?.id;
+    req.userId = verified.id;
     next();
   } catch (error) {
     res.status(400).json({ error: "Invalid token." });
