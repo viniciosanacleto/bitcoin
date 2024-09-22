@@ -1,0 +1,1 @@
+export const QUEUE_NAME="mails_to_send"

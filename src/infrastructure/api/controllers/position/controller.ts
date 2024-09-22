@@ -13,6 +13,8 @@ import validateGetPositions from "./validations/get-positions";
 import { SendgridMail } from "../../../../libs/sendgrid/mail";
 import { BtcPriceRepository } from "../../../database/prisma/repositories/btc-price-repository";
 import { GetLastBtcPriceUseCase } from "../../../../application/use-cases/get-last-btc-price";
+import { MailController } from "../../../../gateways/mail/contoller";
+import { MailPublisher } from "../../../queues/mail/mail-publisher";
 
 export class PositionController {
   public async buy(req: AuthenticatedRequest, res: Response) {
@@ -29,13 +31,17 @@ export class PositionController {
     const data = validatedBody.value as { value: number };
 
     try {
+      const mailController = new MailController(
+        new MailPublisher(),
+        new SendgridMail()
+      );
       const buyBtc = new BuyBtcService(
         new PositionRepository(),
         new UserRepository(),
         new TransactionRepository(),
         new BtcPriceRepository(),
         new MercadoBitcoinAPI(),
-        new SendgridMail()
+        mailController
       );
       const transaction = await buyBtc.execute(req.userId, data.value);
       res.json(transaction);
@@ -58,13 +64,17 @@ export class PositionController {
     const data = validatedBody.value as { quantity: number };
 
     try {
+      const mailController = new MailController(
+        new MailPublisher(),
+        new SendgridMail()
+      );
       const sellBtc = new SellBtcService(
         new PositionRepository(),
         new UserRepository(),
         new TransactionRepository(),
         new BtcPriceRepository(),
         new MercadoBitcoinAPI(),
-        new SendgridMail()
+        mailController
       );
 
       const transaction = await sellBtc.execute(req.userId, data.quantity);

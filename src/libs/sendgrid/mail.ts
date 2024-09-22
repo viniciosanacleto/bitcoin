@@ -1,12 +1,9 @@
 import sgMail, { MailDataRequired } from "@sendgrid/mail";
+import { MailGatewayInterface } from "../../gateways/mail/interfaces";
+import { SendEmailDTO } from "../../gateways/mail/dtos/send-email";
 
-export class SendgridMail {
-  public async send(
-    email: string,
-    subject: string,
-    text: string,
-    html?: string
-  ) {
+export class SendgridMail implements MailGatewayInterface {
+  public async send(emailObj: SendEmailDTO) {
     const apiKey = process.env.SENDGRID_API_KEY;
     if (!apiKey) {
       throw new Error("No sendgrid api key");
@@ -21,10 +18,10 @@ export class SendgridMail {
 
     const message: MailDataRequired = {
       from: sender,
-      to: email,
-      subject,
-      text,
-      html,
+      to: emailObj.email,
+      subject: emailObj.subject,
+      text: emailObj.text,
+      html: emailObj.html,
     };
     try {
       await sgMail.send(message);

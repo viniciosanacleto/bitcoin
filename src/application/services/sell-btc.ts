@@ -4,7 +4,10 @@ import { PositionRepositoryInterface } from "../../domain/position/repository";
 import { TransactionRepositoryInterface } from "../../domain/transaction/repository";
 import { UserRepositoryInterface } from "../../domain/user/repository";
 import { BitcoinMarketGatewayInterface } from "../../gateways/bitcoin-market/interface";
-import { MailGatewayInterface } from "../../gateways/mail/interface";
+import {
+  MailControllerInterface,
+  MailGatewayInterface,
+} from "../../gateways/mail/interfaces";
 import { ClosePositionUseCase } from "../use-cases/close-position";
 import { CreateTransactionUseCase } from "../use-cases/create-transaction";
 import { GetLastBtcPriceUseCase } from "../use-cases/get-last-btc-price";
@@ -17,7 +20,7 @@ export class SellBtcService {
     private transactionRepo: TransactionRepositoryInterface,
     private btcPriceRepo: BtcPriceRepositoryInterface,
     private btcMarket: BitcoinMarketGatewayInterface,
-    private mailSender: MailGatewayInterface
+    private mailController: MailControllerInterface
   ) {}
 
   private async getPositions(
@@ -139,15 +142,15 @@ export class SellBtcService {
     }
 
     try {
-      await this.mailSender.send(
-        user.email,
-        "BTC Sell",
-        `Bitcoin Quantity = ${closedBtcQty.toFixed(8)}\nValue = R$${(
+      await this.mailController.dispatch({
+        email: user.email,
+        subject: "BTC Sell",
+        text: `Bitcoin Quantity = ${closedBtcQty.toFixed(8)}\nValue = R$${(
           user.balance - userBalanceBefore
-        ).toFixed(2)}`
-      );
+        ).toFixed(2)}`,
+      });
     } catch (e) {
-      console.log(e);
+      console.log("Failed to send email: ", e);
     }
 
     return {
