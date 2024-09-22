@@ -3,6 +3,7 @@ import { PositionRepositoryInterface } from "../../domain/position/repository";
 import { TransactionRepositoryInterface } from "../../domain/transaction/repository";
 import { UserRepositoryInterface } from "../../domain/user/repository";
 import { BitcoinMarketGatewayInterface } from "../../gateways/bitcoin-market/interface";
+import { MailGatewayInterface } from "../../gateways/mail/interface";
 import { ClosePositionUseCase } from "../use-cases/close-position";
 import { CreateTransactionUseCase } from "../use-cases/create-transaction";
 import { OpenPositionUseCase } from "../use-cases/open-position";
@@ -12,7 +13,8 @@ export class SellBtcService {
     private positionRepo: PositionRepositoryInterface,
     private userRepo: UserRepositoryInterface,
     private transactionRepo: TransactionRepositoryInterface,
-    private btcMarket: BitcoinMarketGatewayInterface
+    private btcMarket: BitcoinMarketGatewayInterface,
+    private mailSender: MailGatewayInterface
   ) {}
 
   private async getPositions(
@@ -87,6 +89,7 @@ export class SellBtcService {
 
     // Close the positions selected to fill the BTC quantity that order required
     let closedBtcQty = 0;
+    const userBalanceBefore = user.balance;
     for (const position of selectedPositions) {
       const remainingToBeClosed = btcQty - closedBtcQty;
       const valueEarned = position.btcQty * btcPriceNow.buy;
@@ -125,6 +128,18 @@ export class SellBtcService {
         closedBtcQty -= residualQty;
         user.balance -= valueReinvested;
       }
+    }
+
+    try {
+      await this.mailSender.send(
+        user.email,
+        "BTC Sell",
+        `Bitcoin Quantity = ${closedBtcQty.toFixed(8)}\nValue = R$${(
+          user.balance - userBalanceBefore
+        ).toFixed(2)}`
+      );
+    } catch (e) {
+      console.log(e);
     }
 
     return {

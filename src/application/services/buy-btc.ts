@@ -2,6 +2,7 @@ import { PositionRepositoryInterface } from "../../domain/position/repository";
 import { TransactionRepositoryInterface } from "../../domain/transaction/repository";
 import { UserRepositoryInterface } from "../../domain/user/repository";
 import { BitcoinMarketGatewayInterface } from "../../gateways/bitcoin-market/interface";
+import { MailGatewayInterface } from "../../gateways/mail/interface";
 import { CreateTransactionUseCase } from "../use-cases/create-transaction";
 import { OpenPositionUseCase } from "../use-cases/open-position";
 
@@ -10,7 +11,8 @@ export class BuyBtcService {
     private positionRepo: PositionRepositoryInterface,
     private userRepo: UserRepositoryInterface,
     private transactionRepo: TransactionRepositoryInterface,
-    private btcMarket: BitcoinMarketGatewayInterface
+    private btcMarket: BitcoinMarketGatewayInterface,
+    private mailSender: MailGatewayInterface
   ) {}
 
   public async execute(userId: string, value: number) {
@@ -44,6 +46,18 @@ export class BuyBtcService {
       btcQty: qtyToBuy,
       btcPrice: btcPriceNow.sell,
     });
+
+    try {
+      await this.mailSender.send(
+        user.email,
+        "BTC Buy",
+        `Value = R$${value.toFixed(2)}\nBitcoin Quantity = ${qtyToBuy.toFixed(
+          8
+        )}`
+      );
+    } catch (e) {
+      console.log(e);
+    }
 
     return {
       btcPrice: btcPriceNow.sell,

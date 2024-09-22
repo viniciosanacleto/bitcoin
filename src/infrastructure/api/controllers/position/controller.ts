@@ -11,6 +11,7 @@ import { SellBtcService } from "../../../../application/services/sell-btc";
 import { GetBtcPriceService } from "../../../../application/services/btc-price";
 import { GetPositionsService } from "../../../../application/services/get-positions";
 import validateGetPositions from "./validations/get-positions";
+import { SendgridMail } from "../../../../libs/sendgrid/mail";
 
 export class PositionController {
   public async buy(req: AuthenticatedRequest, res: Response) {
@@ -31,11 +32,13 @@ export class PositionController {
       const userRepo = new UserRepository();
       const transactionRepo = new TransactionRepository();
       const mercadoBitcoin = new MercadoBitcoinAPI();
+      const sendgridEmail = new SendgridMail();
       const buyBtc = new BuyBtcService(
         positionRepo,
         userRepo,
         transactionRepo,
-        mercadoBitcoin
+        mercadoBitcoin,
+        sendgridEmail
       );
       const transaction = await buyBtc.execute(req.userId, data.value);
       res.json(transaction);
@@ -62,11 +65,13 @@ export class PositionController {
       const userRepo = new UserRepository();
       const transactionRepo = new TransactionRepository();
       const mercadoBitcoin = new MercadoBitcoinAPI();
+      const sendgridEmail = new SendgridMail();
       const sellBtc = new SellBtcService(
         positionRepo,
         userRepo,
         transactionRepo,
-        mercadoBitcoin
+        mercadoBitcoin,
+        sendgridEmail
       );
 
       const transaction = await sellBtc.execute(req.userId, data.quantity);
