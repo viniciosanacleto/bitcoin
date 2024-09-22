@@ -2,7 +2,10 @@ import { BtcPrice, PrismaClient } from "@prisma/client";
 import { CreateBtcPriceDTO } from "../../../../domain/btc-price/dtos/create-btc-price";
 import { BtcPriceEntity } from "../../../../domain/btc-price/entities";
 import { BtcPriceRepositoryInterface } from "../../../../domain/btc-price/repository";
-import { GetOptions } from "../../../../domain/shared/repository";
+import {
+  DeleteOptions,
+  GetOptions,
+} from "../../../../domain/shared/repository";
 
 export class BtcPriceRepository implements BtcPriceRepositoryInterface {
   private prisma: PrismaClient;
@@ -54,5 +57,11 @@ export class BtcPriceRepository implements BtcPriceRepositoryInterface {
     }
 
     return this.modelToEntity(lastPrice);
+  }
+
+  public async delete(options?: DeleteOptions): Promise<void> {
+    await this.prisma.btcPrice.deleteMany({
+      where: options?.where,
+    });
   }
 }

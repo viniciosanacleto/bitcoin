@@ -5,3 +5,7 @@ export type GetOptions = {
   orderBy?: string;
   order?: "asc" | "desc";
 };
+
+export type DeleteOptions = {
+  where?: { [key: string]: any };
+};
