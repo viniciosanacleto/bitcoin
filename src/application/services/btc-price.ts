@@ -1,6 +1,6 @@
 import { BitcoinMarketGatewayInterface } from "../../gateways/bitcoin-market/interface";
 
-export class GetPriceService {
+export class GetBtcPriceService {
   constructor(private bitcoinMarket: BitcoinMarketGatewayInterface) {}
 
   public async execute() {

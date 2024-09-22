@@ -8,7 +8,7 @@ import { TransactionRepository } from "../../../database/prisma/repositories/tra
 import { MercadoBitcoinAPI } from "../../../../libs/mercado-bitcoin/api";
 import validateSell from "./validations/sell";
 import { SellBtcService } from "../../../../application/services/sell-btc";
-import { GetPriceService } from "../../../../application/services/get-price";
+import { GetBtcPriceService } from "../../../../application/services/btc-price";
 import { GetPositionsService } from "../../../../application/services/get-positions";
 import validateGetPositions from "./validations/get-positions";
 
@@ -85,7 +85,7 @@ export class PositionController {
 
     try {
       const mercadoBitcoin = new MercadoBitcoinAPI();
-      const getPrice = new GetPriceService(mercadoBitcoin);
+      const getPrice = new GetBtcPriceService(mercadoBitcoin);
 
       const price = await getPrice.execute();
       res.json(price);

@@ -21,5 +21,6 @@ router.get("/btc", authMiddleware, positionController.positions);
 
 const transactionController = new TransactionController();
 router.get("/extract", authMiddleware, transactionController.extract);
+router.get("/volume", authMiddleware, transactionController.volume);
 
 export default router;

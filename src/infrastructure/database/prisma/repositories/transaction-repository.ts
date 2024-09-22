@@ -59,4 +59,29 @@ export class TransactionRepository implements TransactionRepositoryInterface {
       where: { userId },
     });
   }
+
+  public async sumBtcQtyBuy(): Promise<number> {
+    const result = await this.prisma.transaction.aggregate({
+      _sum: {
+        btcQty: true,
+      },
+      where: {
+        type: "POSITION_OPEN",
+      },
+    });
+
+    return result._sum.btcQty?.toNumber() || 0;
+  }
+  public async sumBtcQtySell(): Promise<number> {
+    const result = await this.prisma.transaction.aggregate({
+      _sum: {
+        btcQty: true,
+      },
+      where: {
+        type: "POSITION_CLOSE",
+      },
+    });
+
+    return result._sum.btcQty?.toNumber() || 0;
+  }
 }

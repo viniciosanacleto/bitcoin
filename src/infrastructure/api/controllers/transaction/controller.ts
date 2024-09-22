@@ -1,9 +1,9 @@
-import { AuthenticatedRequest } from "../../middlewares/auth-middleware";
 import { Response } from "express";
-import validateExtract from "./validations/extract";
-import { subtractDays } from "../../../../shared/utils/subtractDays";
-import { TransactionRepository } from "../../../database/prisma/repositories/transaction-repository";
 import { GetExtractService } from "../../../../application/services/extract";
+import { TransactionRepository } from "../../../database/prisma/repositories/transaction-repository";
+import { AuthenticatedRequest } from "../../middlewares/auth-middleware";
+import validateExtract from "./validations/extract";
+import { GetTransactionsVolumeService } from "../../../../application/services/transactions-volume";
 
 export class TransactionController {
   public async extract(req: AuthenticatedRequest, res: Response) {
@@ -36,6 +36,24 @@ export class TransactionController {
         params.endAt
       );
       res.json(response);
+    } catch (e) {
+      res.status(500).json({ error: (e as Error).message });
+      return;
+    }
+  }
+
+  public async volume(req: AuthenticatedRequest, res: Response) {
+    if (!req.userId) {
+      res.status(401).send();
+      return;
+    }
+
+    try {
+      const transactionRepo = new TransactionRepository();
+      const getVolume = new GetTransactionsVolumeService(transactionRepo);
+
+      const volume = await getVolume.execute();
+      res.json(volume);
     } catch (e) {
       res.status(500).json({ error: (e as Error).message });
       return;
