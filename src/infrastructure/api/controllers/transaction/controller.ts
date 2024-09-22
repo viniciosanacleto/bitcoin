@@ -1,9 +1,9 @@
 import { Response } from "express";
 import { GetExtractService } from "../../../../application/services/extract";
+import { GetTransactionsVolumeService } from "../../../../application/services/transactions-volume";
 import { TransactionRepository } from "../../../database/prisma/repositories/transaction-repository";
 import { AuthenticatedRequest } from "../../middlewares/auth-middleware";
 import validateExtract from "./validations/extract";
-import { GetTransactionsVolumeService } from "../../../../application/services/transactions-volume";
 
 export class TransactionController {
   public async extract(req: AuthenticatedRequest, res: Response) {
@@ -25,8 +25,7 @@ export class TransactionController {
     };
 
     try {
-      const transactionRepo = new TransactionRepository();
-      const getExtract = new GetExtractService(transactionRepo);
+      const getExtract = new GetExtractService(new TransactionRepository());
 
       const response = await getExtract.execute(
         req.userId,
@@ -49,8 +48,9 @@ export class TransactionController {
     }
 
     try {
-      const transactionRepo = new TransactionRepository();
-      const getVolume = new GetTransactionsVolumeService(transactionRepo);
+      const getVolume = new GetTransactionsVolumeService(
+        new TransactionRepository()
+      );
 
       const volume = await getVolume.execute();
       res.json(volume);

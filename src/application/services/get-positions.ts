@@ -1,10 +1,13 @@
 import { PositionRepositoryInterface } from "../../domain/position/repository";
 import { BitcoinMarketGatewayInterface } from "../../gateways/bitcoin-market/interface";
 import { PositionEntity } from "../../domain/position/entities";
+import { BtcPriceRepositoryInterface } from "../../domain/btc-price/repository";
+import { GetLastBtcPriceUseCase } from "../use-cases/get-last-btc-price";
 
 export class GetPositionsService {
   constructor(
     private positionRepo: PositionRepositoryInterface,
+    private btcPriceRepo: BtcPriceRepositoryInterface,
     private bitcoinMarket: BitcoinMarketGatewayInterface
   ) {}
 
@@ -20,7 +23,11 @@ export class GetPositionsService {
       pageSize: pageSize <= 0 ? 10 : pageSize,
     });
 
-    const btcPriceNow = await this.bitcoinMarket.getLastPrice();
+    const getLastBtcPrice = new GetLastBtcPriceUseCase(
+      this.btcPriceRepo,
+      this.bitcoinMarket
+    );
+    const btcPriceNow = await getLastBtcPrice.execute();
 
     const calculatedPositions = positions.map((position: PositionEntity) => {
       const currentValue = position.btcQty * btcPriceNow.buy;

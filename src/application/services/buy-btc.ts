@@ -1,9 +1,11 @@
+import { BtcPriceRepositoryInterface } from "../../domain/btc-price/repository";
 import { PositionRepositoryInterface } from "../../domain/position/repository";
 import { TransactionRepositoryInterface } from "../../domain/transaction/repository";
 import { UserRepositoryInterface } from "../../domain/user/repository";
 import { BitcoinMarketGatewayInterface } from "../../gateways/bitcoin-market/interface";
 import { MailGatewayInterface } from "../../gateways/mail/interface";
 import { CreateTransactionUseCase } from "../use-cases/create-transaction";
+import { GetLastBtcPriceUseCase } from "../use-cases/get-last-btc-price";
 import { OpenPositionUseCase } from "../use-cases/open-position";
 
 export class BuyBtcService {
@@ -11,6 +13,7 @@ export class BuyBtcService {
     private positionRepo: PositionRepositoryInterface,
     private userRepo: UserRepositoryInterface,
     private transactionRepo: TransactionRepositoryInterface,
+    private btcPriceRepo: BtcPriceRepositoryInterface,
     private btcMarket: BitcoinMarketGatewayInterface,
     private mailSender: MailGatewayInterface
   ) {}
@@ -25,7 +28,11 @@ export class BuyBtcService {
       throw new Error("Value should be greater than 0");
     }
 
-    const btcPriceNow = await this.btcMarket.getLastPrice();
+    const getLastBtcPrice = new GetLastBtcPriceUseCase(
+      this.btcPriceRepo,
+      this.btcMarket
+    );
+    const btcPriceNow = await getLastBtcPrice.execute();
     const qtyToBuy = value / btcPriceNow.sell;
 
     const openPosition = new OpenPositionUseCase(

@@ -1,3 +1,4 @@
+import { BtcPriceRepositoryInterface } from "../../domain/btc-price/repository";
 import { PositionEntity } from "../../domain/position/entities";
 import { PositionRepositoryInterface } from "../../domain/position/repository";
 import { TransactionRepositoryInterface } from "../../domain/transaction/repository";
@@ -6,6 +7,7 @@ import { BitcoinMarketGatewayInterface } from "../../gateways/bitcoin-market/int
 import { MailGatewayInterface } from "../../gateways/mail/interface";
 import { ClosePositionUseCase } from "../use-cases/close-position";
 import { CreateTransactionUseCase } from "../use-cases/create-transaction";
+import { GetLastBtcPriceUseCase } from "../use-cases/get-last-btc-price";
 import { OpenPositionUseCase } from "../use-cases/open-position";
 
 export class SellBtcService {
@@ -13,6 +15,7 @@ export class SellBtcService {
     private positionRepo: PositionRepositoryInterface,
     private userRepo: UserRepositoryInterface,
     private transactionRepo: TransactionRepositoryInterface,
+    private btcPriceRepo: BtcPriceRepositoryInterface,
     private btcMarket: BitcoinMarketGatewayInterface,
     private mailSender: MailGatewayInterface
   ) {}
@@ -74,6 +77,12 @@ export class SellBtcService {
       throw new Error("No positions found to be closed");
     }
 
+    const getLastBtcPrice = new GetLastBtcPriceUseCase(
+      this.btcPriceRepo,
+      this.btcMarket
+    );
+    const btcPriceNow = await getLastBtcPrice.execute();
+
     const closePosition = new ClosePositionUseCase(
       this.positionRepo,
       this.userRepo
@@ -85,7 +94,6 @@ export class SellBtcService {
     const createTransaction = new CreateTransactionUseCase(
       this.transactionRepo
     );
-    const btcPriceNow = await this.btcMarket.getLastPrice();
 
     // Close the positions selected to fill the BTC quantity that order required
     let closedBtcQty = 0;

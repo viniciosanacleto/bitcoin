@@ -1,15 +1,15 @@
 import { Request, Response } from "express";
-import { CreateUserUseCase } from "../../../../application/use-cases/create-user";
-import { UserRepository } from "../../../database/prisma/repositories/user-repository";
-import validateCreateUser from "./validations/create";
-import validateLogin from "./validations/login";
 import { AuthService } from "../../../../application/services/auth";
-import { AuthenticateUserDTO } from "../../../../domain/user/dtos/authenticate";
-import { AuthenticatedRequest } from "../../middlewares/auth-middleware";
-import { GetBalanceService } from "../../../../application/services/get-balance";
 import { DepositService } from "../../../../application/services/deposit";
+import { GetBalanceService } from "../../../../application/services/get-balance";
+import { CreateUserUseCase } from "../../../../application/use-cases/create-user";
+import { AuthenticateUserDTO } from "../../../../domain/user/dtos/authenticate";
 import { TransactionRepository } from "../../../database/prisma/repositories/transaction-repository";
+import { UserRepository } from "../../../database/prisma/repositories/user-repository";
+import { AuthenticatedRequest } from "../../middlewares/auth-middleware";
+import validateCreateUser from "./validations/create";
 import validateDeposit from "./validations/deposit";
+import validateLogin from "./validations/login";
 
 export class UserController {
   public async create(req: Request, res: Response) {
@@ -20,8 +20,7 @@ export class UserController {
     }
 
     try {
-      const userRepo = new UserRepository();
-      const createUser = new CreateUserUseCase(userRepo);
+      const createUser = new CreateUserUseCase(new UserRepository());
       await createUser.execute(validatedBody.value);
       res.status(201).send();
     } catch (e) {
@@ -38,8 +37,7 @@ export class UserController {
     const data = validatedBody.value as AuthenticateUserDTO;
 
     try {
-      const userRepo = new UserRepository();
-      const auth = new AuthService(userRepo);
+      const auth = new AuthService(new UserRepository());
       const token = await auth.execute(data.email, data.password);
       res.json({ token });
     } catch (e) {
@@ -55,8 +53,7 @@ export class UserController {
     }
 
     try {
-      const userRepo = new UserRepository();
-      const getBalance = new GetBalanceService(userRepo);
+      const getBalance = new GetBalanceService(new UserRepository());
       const balance = await getBalance.execute(req.userId);
 
       res.json({ balance });
@@ -81,9 +78,10 @@ export class UserController {
     const data = validatedBody.value as { amount: number };
 
     try {
-      const userRepo = new UserRepository();
-      const transactionRepo = new TransactionRepository();
-      const deposit = new DepositService(userRepo, transactionRepo);
+      const deposit = new DepositService(
+        new UserRepository(),
+        new TransactionRepository()
+      );
       const newBalance = await deposit.execute(req.userId, data.amount);
 
       res.json({ balance: newBalance });
